@@ -1,0 +1,54 @@
+# config.toml (place in project root or specify via --config)
+[index]
+# - root index path default "./index"
+index_path = "./index"
+# - tantivy index subdirectory default "tantivy_index"
+# tantivy_dir = "tantivy_index"
+# - tanitvy commit interval in ms default 5000
+# commit_interval_ms = 5000
+# - max writer thread normally thread = cpu cores default 8
+# max_threads = 8
+# - buffer size for tantivy default 100_000_000
+#buffer_size = 100_000_000
+# - enable steam (stemming) index
+enable_steam = true
+# - enable hnws vector index default false
+enable_hnsw = true
+# - possible languages are : "ar", "da", "nl", "en", "fi", "fr", "de", "el", "hu", "it", "no", "pt", "ro", "ru", "es", "sv", "ta", "tr"
+# - default is "en"
+languages= ["en","de","nl"]
+
+#[index.hnsw]
+# - HNSW subdirectory default 'hnsw_index'
+# hnsw_dir=hnsw_index
+# - index N-Grams default 2 tokens
+# n_grams = 2
+# - dimension for layer default: 4096 (dim)
+# dimension =4096
+# - Max connections per layer (16)
+# m = 16
+# - Construction ef (ef_construction)
+# ef_construction= 200
+# - Search ef (ef_search) default 64
+# ef_search = 64
+# - Fix RNG seed for reproducible index layouts default 42
+# seed = 42
+# - Stem (stemming) tokenizer enabled: true
+# stem = true
+
+
+[search]
+# - default search limit
+default_limit = 10
+# - max limit 100
+max_limit = 100
+
+[server]
+# - server ip and port default "0.0.0.0:8080"
+# from = "0.0.0.0:8080"
+# - enable tls default false
+# enable_tls = false
+# - optional certification path to pem file
+# cert_path =
+# # - optional key path to pem file
+# key_path =

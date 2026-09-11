@@ -1,0 +1,42 @@
+# tecton-web/Cargo.toml
+[package]
+name = "tecton-web"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+tecton-core = { path = "../core" }
+#tecton-core = {  workspace = true  }
+axum = { workspace = true }
+chrono = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+metrics = { workspace = true }
+metrics-exporter-prometheus = { workspace = true }
+opentelemetry = { workspace = true }
+opentelemetry-otlp = { workspace = true }
+opentelemetry_sdk = { workspace = true }
+uuid = { workspace = true }
+ulid = { workspace = true }
+pulldown-cmark = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+figment = { workspace = true }
+utoipa = { workspace = true }
+utoipa-axum = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
+utoipa-redoc = { workspace = true }
+utoipa-rapidoc = { workspace = true }
+utoipa-scalar = { workspace = true }
+axum-extra = { workspace = true }
+walkdir ={ workspace = true }
+comfy-table = { workspace = true }
