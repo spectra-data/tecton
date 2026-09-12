@@ -52,3 +52,7 @@ max_limit = 100
 # cert_path =
 # # - optional key path to pem file
 # key_path =
+# Opentelemetry prometheus
+# otel =true
+# Open telemetry endpoint prometheus
+# otel_endpoint ="http://localhost:9090/api/v1/otlp/v1/metrics"

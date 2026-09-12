@@ -1,5 +1,3 @@
-use std::usize;
-
 // tecton-web/src/routes/search.rs
 use crate::state::{
     AppState, IdResponse, SearchKeywordRequest, SearchRequest, SearchResponse, SearchSternRequest,

@@ -1,20 +1,30 @@
 // tecton-cli/src/commands/server.rs
 use anyhow::Result;
-//use axum::serve;
 use axum_server::tls_rustls::RustlsConfig;
 use clap::Args;
-//use tracing::info;
-//use opentelemetry::trace::TracerProvider;
-//use opentelemetry::{KeyValue, global};
-//use opentelemetry_otlp::WithExportConfig;
-use std::net::SocketAddr;
+//use opentelemetry::trace::TracerProvider as _;
+use opentelemetry::{KeyValue, trace::TracerProvider};
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::{propagation::TraceContextPropagator, trace::SdkTracerProvider};
 use std::time::Duration;
+//use opentelemetry_sdk::{propagation::TraceContextPropagator, trace::SdkTracerProvider};
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+
+use std::net::SocketAddr;
+
 use tecton_core::config::CoreConfig;
 use tecton_web::{AppState, create_router, create_service_router};
 use tokio::signal;
 use tower::ServiceBuilder;
-use tower_http::{compression::CompressionLayer, cors::CorsLayer, trace::TraceLayer};
-use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+use tower_http::{
+    compression::CompressionLayer,
+    cors::CorsLayer,
+    request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
+    trace::TraceLayer,
+};
+//use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Args, PartialEq, Eq, Clone)]
 pub struct ServerArgs {
@@ -51,11 +61,6 @@ pub async fn execute(config: CoreConfig, _args: ServerArgs) -> Result<()> {
     if serv_config.otel && serv_config.otel_endpoint.is_some() {
         let _otel = init_opentelemetry(serv_config.otel_endpoint.as_deref());
     }
-    /*
-    if args.otel || args.otel_endpoint.is_some() {
-        init_opentelemetry(args.otel_endpoint.as_deref())?;
-    }
-    */
 
     // init_metrics();
     // Create application state
@@ -65,6 +70,24 @@ pub async fn execute(config: CoreConfig, _args: ServerArgs) -> Result<()> {
     let app = create_router(state.clone()).layer(
         ServiceBuilder::new()
             .layer(TraceLayer::new_for_http())
+            .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid))
+            .layer(
+                TraceLayer::new_for_http().make_span_with(|request: &axum::http::Request<_>| {
+                    let request_id = request
+                        .headers()
+                        .get("x-request-id")
+                        .and_then(|v| v.to_str().ok())
+                        .unwrap_or("unknown");
+
+                    tracing::info_span!(
+                        "http_request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        request_id = %request_id,
+                    )
+                }),
+            )
+            .layer(PropagateRequestIdLayer::x_request_id())
             .layer(CorsLayer::permissive())
             .layer(CompressionLayer::new()),
     );
@@ -109,25 +132,72 @@ pub async fn execute(config: CoreConfig, _args: ServerArgs) -> Result<()> {
     Router::new().route("/metrics", get(move || ready(recorder_handle.render())))
 }*/
 
-fn init_opentelemetry(_endpoint: Option<&str>) -> Result<()> {
-    /*
-        let endpoint = endpoint.unwrap_or("http://localhost:4317");
+fn init_opentelemetry(endpoint: Option<&str>) -> Result<SdkTracerProvider> {
+    /* let exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_tonic()
+        .build()
+        .unwrap();
 
-        let exporter = opentelemetry_otlp::new_exporter()
-            .tonic()
-            .with_endpoint(endpoint);
+    let provider = SdkTracerProvider::builder()
+        // Customize sampling strategy
+        .with_sampler(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
+            1.0,
+        ))))
+        // If export trace to AWS X-Ray, you can use XrayIdGenerator
+        .with_id_generator(RandomIdGenerator::default())
+        .with_resource(resource())
+        .with_batch_exporter(exporter)
+        .build();
 
-        let provider = TracerProvider::builder()
-            .with_batch_exporter(exporter)
-            .with_resource(opentelemetry_sdk::Resource::new(vec![
-                KeyValue::new("service.name", "ttecton"),
-                KeyValue::new("service.version", env!("CARGO_PKG_VERSION")),
-            ]))
-            .build();
-
-        global::set_tracer_provider(provider);
+    Ok(provider)*/
+    let endpoint = endpoint.unwrap_or("http://localhost:4317");
+    /*let exporter = opentelemetry_otlp::MetricExporter::builder()
+    .with_tonic()
+    //.with_protocol(Protocol::HttpBinary)
+    .with_endpoint(endpoint)
+    .build()?;
     */
-    Ok(())
+    opentelemetry::global::set_text_map_propagator(TraceContextPropagator::new());
+    let exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_tonic()
+        .with_endpoint(endpoint)
+        .build()?;
+    let provider = SdkTracerProvider::builder()
+        .with_batch_exporter(exporter)
+        .with_resource(
+            opentelemetry_sdk::Resource::builder_empty()
+                .with_service_name("tecton")
+                .with_attributes(vec![KeyValue::new(
+                    "service.version",
+                    env!("CARGO_PKG_VERSION"),
+                )])
+                .build(),
+        )
+        .build();
+
+    let tracer = provider.tracer("tecton");
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .with(tracing_opentelemetry::layer().with_tracer(tracer))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+    /*let meter_provider = SdkMeterProvider::builder()
+    .with_periodic_exporter(exporter)
+    .with_resource(
+        opentelemetry_sdk::Resource::builder()
+            .with_service_name("tecton")
+            .with_attributes(vec![KeyValue::new(
+                "service.version",
+                env!("CARGO_PKG_VERSION"),
+            )])
+            .build(),
+    )
+    .build();*/
+
+    //global::set_meter_provider(meter_provider.clone());
+
+    Ok(provider)
 }
 
 async fn shutdown_signal(handle: axum_server::Handle<SocketAddr>) {

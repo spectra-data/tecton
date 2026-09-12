@@ -73,13 +73,12 @@ impl Modify for SecurityAddon {
 struct OuterState {}
 
 pub fn create_router(state: AppState) -> Router {
-    //let recorder_handle = setup_metrics_recorder();
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/index", index::router())
         .nest("/search", search::router())
         .with_state(state)
         .split_for_parts();
-    // router.route_layer(middleware::from_fn(health::track_metrics));
+
     async fn outer_handler(_state: State<OuterState>) {}
     router
         .route_layer(middleware::from_fn(health::track_metrics))
