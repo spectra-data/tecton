@@ -6,10 +6,10 @@ edition = { workspace = true }
 license = { workspace = true }
 authors = { workspace = true }
 repository = { workspace = true }
+rust-version = {workspace = true}
 
 [dependencies]
 tantivy = { workspace = true }
-#tantivy-analysis-contrib = { workspace = true }
 ulid = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }
@@ -22,18 +22,12 @@ parking_lot = { workspace = true }
 dashmap = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
-pulldown-cmark = { workspace = true }
-figment = { workspace = true }
 num_cpus = {workspace = true}
 utoipa = {workspace = true}
 
 fast-hnsw= {workspace = true}
-candle-core = {workspace = true}
-candle-nn = {workspace = true}
-candle-transformers = {workspace = true}
 tokenizers = {workspace = true}
 hf-hub = {workspace = true}
-safetensors = {workspace = true}
 
 whichlang = {workspace = true}
 const_format = {workspace = true}
@@ -42,4 +36,3 @@ ahash= {workspace = true}
 
 once_cell = {workspace = true}
 rayon= {workspace = true}
-derive_more= {workspace = true}

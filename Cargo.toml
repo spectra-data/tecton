@@ -17,14 +17,13 @@ rust-version = "1.98.1"
 
 [workspace.dependencies]
 # Internal crates
-tecton-core = { path = "crates/core" }
-tecton-web = { path = "crates/web" }
-tecton-cli = { path = "crates/cli" }
+#tecton-core = { path = "crates/core" }
+#tecton-web = { path = "crates/web" }
+#tecton-cli = { path = "crates/cli" }
 
 
 # Core
 tantivy = { version = "0.26", features = [ "default" ,"stemmer", "zstd-compression","columnar-zstd-compression"] }
-#tantivy-analysis-contrib = { version = "0.12", features = ["default", "phonetic","embedded"] }
 ulid = "3.0"
 chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -32,28 +31,24 @@ serde_json = "1.0"
 thiserror = "2.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["default","env-filter", "fmt", "json"] }
+
 metrics = "0.24"
 metrics-exporter-prometheus = "0.18"
 opentelemetry = { version = "0.32", features = ["trace"] }
-opentelemetry-otlp = { version = "0.32", features = ["tonic"] }
+opentelemetry-otlp = { version = "0.32", features = ["metrics","grpc-tonic"] }
 opentelemetry_sdk = { version = "0.32", features = ["trace"] }
+tracing-opentelemetry= { version="0.33"}
 anyhow = "1.0"
 tokio = { version = "1.53", features = ["full"] }
 parking_lot = "0.12"
 dashmap = "6.2"
 num_cpus = "1.17"
-derive_more= {version= "2.1", features=["debug"]}
 whichlang ="0.1"
 const_format = "0.2"
 
 fast-hnsw = { version = "1"} #, features = ["serde", "rayon"] } # rayon for parallel build
-# ML / Embeddings (Pure Rust, CPU, Auto-download)
-candle-core = { version = "0.11" }
-candle-nn = { version = "0.11"}
-candle-transformers = { version = "0.11" }
 tokenizers = "0.23"
 hf-hub = { version = "1", features = ["socks","blocking"] }
-safetensors = "0.8"
 ahash = "0.8"
 
 once_cell = "1.21"   # Global model initialization
@@ -72,12 +67,9 @@ toml="1.1"
 axum = { version = "0.8", features = ["ws","http2"] }
 tower = { version = "0.5", features = ["util", "timeout", "limit"] }
 tower-http = { version = "0.7", features = ["full"] }
-#tower-http = { version = "0.7", features = ["trace", "cors", "compression", "classify", "metrics", "propagate-header", "add-extension", "sensitive-headers", "set-header", "catch-panic", "fs", "latency", "request-id", "retry", "service-builder", "timeout", "validate-request"] }
 hyper = { version = "1.11", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
 uuid = { version = "1.0", features = ["serde", "v4"] }
-#pulldown-cmark = { version = "0.13", features = ["simd-unicode"] }
-pulldown-cmark = { version = "0.13" }
 
 utoipa = { version = "5.5", features = ["axum_extras","chrono"] }
 utoipa-axum = { version = "0.2" }
@@ -92,7 +84,5 @@ walkdir = "2.5"
 
 # Config
 figment = { version = "0.10", features = ["toml", "yaml", "env"] }
-config = { version = "0.15", features = ["toml", "env"] }
-
 
 #[dev-dependencies]

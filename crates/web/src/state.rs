@@ -22,7 +22,6 @@ impl AppState {
     pub async fn new(config: CoreConfig) -> anyhow::Result<Self> {
         let index = TectonIndex::new(config.clone())?;
         Ok(Self {
-            //index: Arc::new(RwLock::new(index)),
             index: Arc::new(index),
             config,
         })
