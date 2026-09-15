@@ -33,7 +33,7 @@ pub enum AdminCommand {
     /// Show index statistics
     Stats(StatsArgs),
 
-    /// Delete all documents matching criteria
+    /// Delete an document by the matching id
     Delete(DeleteArgs),
 
     /// Backup index
@@ -76,7 +76,7 @@ pub struct StatsArgs {
 
 #[derive(Args, PartialEq, Eq, Clone)]
 pub struct DeleteArgs {
-    /// Document name to delete
+    /// Document ULID id to delete
     #[arg(long)]
     pub id: String,
 

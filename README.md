@@ -37,13 +37,18 @@ The default language is only ` "en" `
 The vector index is an Hmsw Hash based inder with confiragble n-gram, size and layers
 
 > [!NOTE]
-> All requirements for an inder are different, please test out the best result fore your requirement.  
-A sample config is provided in the config folder. [config](./config/config.toml)
+> All requirements for an index are different, please test out the best result for your requirement.  
 
+### Configuration 
+A sample config is provided in the config folder. [config](./config/config.toml)
 
 
 ## Local execution
 
+Check out the eproject from git
+```bash
+https://github.com/spectra-data/tecton.git
+``` 
 Build the project with
 
 ```sh
@@ -54,6 +59,402 @@ Copy the executable or execute from the building folder
 ./target/release/tecton
 ```
 
+You can also run it via cargao
+```sh
+# run the web server
+cargo run -- server
+```
+
+---
+
+## The cli
+
+The indexer has a full cli integration for index, search, update-keywords, admin, server and help.   
+run:  
+```bash
+tecton
+```  
+and the help and commands will be displayed
+```
+Text block indexer and search engine
+
+Usage: tecton [OPTIONS] <COMMAND>
+
+Commands:
+  index            Index a single text block
+  search           Search commands
+  update-keywords  Update keywords for a document
+  admin            Administrative commands
+  server           Start web server
+  help             Print this message or the help of the given subcommand(s)
+
+Options:
+  -c, --config <CONFIG>  Path to config file
+  -v, --verbose          Enable verbose output
+  -h, --help             Print help
+  -V, --version          Print version
+  ```
+
+On every command a help is available.
+
+### Command index
+Index a sinbgle text block.  
+```bash
+tecton index [OPTIONS] --text <TEXT> --name <DOCUMENT_NAME>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+| -t | --text|  | Text content to index |
+| -nm | --name | | The document name |
+| -l | --language | en | The 2 char language code for the text (e.g., en, de, fr). ___Must be enabled in the config.___|
+|    | --tree | Tree path (e.g., /chapter1/section2 |
+| -d | --date |auto generate at index | Date in ISO 8601 format |
+| -k | --keywords |  | Comma separated keywords (e.g. "first","txt","group one") |
+|  | --id | auto-generated ULID if missing | Unic ULID Id for the index entry. |
+| | --commit | | Commit immediately after indexing | 
+
+Examples:  
+```bash
+tecton index --text 'Text zum inizieren' --name sample.txt --language de
+tecton index --text 'Text zum inizieren' --name sample.txt --language de --id 01BX5ZZKBKACTAV9WEVGEMMVRZ
+```
+----
+
+### Command search
+The search contains multiple subcommands to find blocks by:
+| Command | Description |
+| ------- | ----------- |
+| stem    |  Stemming search |
+|  fulltext | Fulltext search  |
+|  vector   | Vector search |
+|  tree     | Tree/hierarchy search |
+|  keyword  | Keyword search |
+|  document | Search by document name |
+|  id       | Search by document name |
+
+
+#### Command search stem
+```bash
+tecton search stem [OPTIONS] --query <QUERY> --language <LANGUAGE>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+| -q  |  --query |     |   Search query |
+|  -l  |  --language| |   Language for tokenizer and index|
+|  -n  |  --name | |      Filter by document name |
+|      |  --min-date | |  Minimum date (ISO 8601) |
+|      |  --max-date | |  Maximum date (ISO 8601) |
+|      |  --limit | 10 |  Maximum number of results | 
+|       | --offset |0 |   Offset for pagination  |
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+|      |  --id | |   Filter by Id |
+|      |  --tree | |  Filter by tree |
+|      |  --keys | |  Filter by keys |
+
+#### Command search fulltext
+```bash
+tecton search fulltext [OPTIONS] --query <QUERY> --language <LANGUAGE>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+| -q  |  --query |     |   Search query |
+|  -l  |  --language| |   Language for tokenizer and index|
+|  -n  |  --name | |      Filter by document name |
+|      |  --min-date | |  Minimum date (ISO 8601) |
+|      |  --max-date | |  Maximum date (ISO 8601) |
+|      |  --limit | 10 |  Maximum number of results | 
+|       | --offset |0 |   Offset for pagination  |
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+|      |  --id | |   Filter by Id |
+|      |  --tree | |  Filter by tree |
+|      |  --keys | |  Filter by keys |
+
+#### Command search vector
+```bash
+tecton search vector [OPTIONS] --query <QUERY> --language <LANGUAGE>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+| -q  |  --query |     |   Search query |
+|  -l  |  --language| |   Language for tokenizer and index|
+|  -n  |  --name | |      Filter by document name |
+|      |  --min-date | |  Minimum date (ISO 8601) |
+|      |  --limit | 10 |  Maximum number of results | 
+|       | --offset |0 |   Offset for pagination  |
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+|      |  --id | |   Filter by Id |
+|      |  --tree | |  Filter by tree |
+
+#### Command search tree
+```bash
+tecton search tree [OPTIONS] --tree <TREE> --language <LANGUAGE>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|  -t   |  --tree | |  Tree pth prefix to search|
+|  -l  |  --language| |   Filter by language|
+|  -n  |  --name | |      Filter by document name |
+|      |  --min-date | |  Minimum date (ISO 8601) |
+|      |  --limit | 10 |  Maximum number of results | 
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+
+#### Command search keyword
+```bash
+tecton search keyword [OPTIONS] --keys <KEY>,<KEY> --language <LANGUAGE>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|    -k  |  --keys | |  Keywords to search for |
+|  -l  |  --language| |   Filter by language|
+|  -n  |  --name | |      Filter by document name |
+|      |  --min-date | |  Minimum date (ISO 8601) |
+|      |  --limit | 10 |  Maximum number of results | 
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+|     |  --tree | |  Tree pth prefix to search|
+
+#### Command search document
+```bash
+tecton search keyword [OPTIONS] --name <DOCUMENT_NAME>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|    -n  |  --name | |  Document name to search|
+|      |  --limit | 10 |  Maximum number of results | 
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+
+#### Command search id
+```bash
+tecton search id [OPTIONS] --id <ID>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|      |  --id | |  Document id to search|
+|  -f  |  --format | table|      Output format: json, table, text  [possible values: json, table, text, csv] |
+
+---
+
+### Command update-keywords
+Update keywords for an document id
+```bash
+tecton update-keywords [OPTIONS] --id <ID>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|      |  --id | |  Document ULID id to update for|
+| -k |  --keywords| |Keywords to add/replace (comma-separated) |
+| -a | --action| add | Action: add (append) or replace [possible values: add, replace] |
+|  | --commit  | |Commit immediately |
+
+---
+
+### Command admin
+The admin contains multiple subcommands.
+| Command | Description |
+| ------- | ----------- |
+| create   | Create a new empty index |
+| compact  | Compact/optimize the index |
+| stats    | Show index statistics |
+| delete   | Delete an document by the matching id |
+| backup   | Backup index |
+| restore  | Restore index from backup |
+| toml-config |  Print a toml config file with default value |
+
+#### Command admin create
+Create a new empty index it fails if an index exists.
+```bash
+tecton admin create
+```
+
+#### Command admin compacte
+Compact the index it fails if another process use the index.
+```bash
+tecton admin compact
+```
+
+#### Command admin stats
+Statistic of the index.
+```bash
+tecton admin stats
+```
+A sample result:  
+| Property             | Value    |
+| -------------------- | -------  |
+| Documents            | 4        |
+| Index Path           | ./index  |
+| Commit Interval      | 5000ms   |
+| Max Threads          | 8        |
+| Vector Index Enabled | true     |
+| Stemming Enabled     | true     |
+| Tantivy Index Size   | 19.78 KB |
+| Hnsw Index Size      | 64.77 KB |
+
+### Command admin delete
+Delete an document by the matching id
+```bash
+tecton admin delete [OPTIONS] --id <ID>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|      |  --id | |  Document ULID id to delete|
+| -k |  --confirm | false |Confirm deletion |
+
+### Command admin backup
+Backup ht full index directory
+```bash
+tecton admin backup [OPTIONS] -o <OUTPUT>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|  -o    |  --output | |  Backup output directory. If not exists it will be crated|
+
+### Command admin restore
+Restore the index from an backup directory
+```bash
+tecton admin restore [OPTIONS] -input <INPUT> --target <TARGET>
+```
+The options:  
+| Short | Option | Default | Description |
+| ------ | ------| ------- | ----------- |
+|  -i    |  --input | |  Backup directory to restore from |
+|  -t    |  --target | |  Target index path |
+
+### Command admin toml-config
+Print a toml config file with default values
+```bash
+tecton admin toml-config
+```
+```toml
+# Default tectonx configuration
+[index]
+index_path = "./index"
+tantivy_dir = "tantivy_index"
+commit_interval_ms = 5000
+max_threads = 8
+buffer_size = 100000000
+enable_steam = true
+enable_hnsw = false
+languages = ["en"]
+
+[index.hnsw]
+hnsw_dir = "hnsw_index"
+n_grams = 2
+dimension = 4096
+m = 16
+ef_construction = 200
+ef_search = 64
+seed = 42
+stem = true
+
+[search]
+default_limit = 10
+max_limit = 100
+
+[server]
+from = "0.0.0.0:8080"
+enable_tls = false
+otel = false
+```
+
+---
+
+### Command server
+Tecton provides a web server with endpoints for observabalility and a REST API.
+
+To start the indexer as server with an REST interface use:  
+```bash
+tecton server
+```
+By default a server will be started for `0.0.0.0:8080` this can be changed via `config` file.
+
+Endpoints of the service:
+| path | description |
+| ---- | ----------- |
+| /actuate/health | health endpoint |
+| /actuate/ready | ready endpoint |
+| /metrics | metrics endpoint |
+| /redoc | swagger documentation |
+| /scalar | rest endpoint documentation with test execution |
+| /api/index/* | REST API for index |
+| /api/search/* | REST API for search documents |
+
+
+
+#### Actuiate health and ready
+
+The dnpoint `heath` and `ready` are for readuness and health checks. They can be used for checks inside of docker or kubernetes.   
+Both provided a OK(200) with JSON payload
+
+Ready payload:  
+```json
+{"status":"ready","version":"0.1.0","index_docs":4}
+{"status":"healthy","version":"0.1.0","index_docs":2}
+```
+
+Health payload:  
+```json
+{"status":"healthy","version":"0.1.0","index_docs":2}
+```
+
+#### Metrics
+
+All activities are instrumentd and wrote metrics at the `/metrics` endpoint
+
+These are:
+| name | type| labels |
+| ---- | ---- | --------- |
+| tecton_commit_duration_seconds | counter | |
+| tecton_compact_duration_seconds | counter | |
+| tecton_documents_total | gauge | |
+| tecton_documents_updated_total | gauge| |
+| tecton_document_size_bytes | gauge |lang |
+| tecton_documents_added_total | gauge | lang |
+| tecton_errors_total | counter| |
+| tecton_index_size_bytes | gauge | |
+| tecton_search_fulltext_total | counter | lang|
+| tecton_search_stern_total | counter | lang|
+| tecton_search_tree_total | counter | |
+| tecton_search_keyword_total | counter | |
+| tecton_search_id_total | counter | |
+| tecton_search_document_total | counter | |
+| tecton_search_vector_total | counter |lang |
+| tecton_search_fulltext_duration_seconds | histogram |lang|
+| tecton_search_stern_duration_seconds | histogram |lang |
+| tecton_search_tree_duration_seconds | histogram | |
+| tecton_search_keyword_duration_seconds | histogram | |
+| tecton_search_id_duration_seconds | histogram | |
+| tecton_search_document_duration_seconds | histogram | |
+| tecton_search_vector_duration_seconds | histogram | lang|
+| tecton_http_requests_total | counter |  method, path, status |
+| tecton_http_requests_duration_seconds | histogram |  method, path, status |
+| tecton_http_requests_duration_seconds_count| counter | method, path, status |
+
+
+#### Swagger documentation
+
+A full REST Swagger documentation.
+
+#### Scalar documentation
+
+A full REST OpenApi 3.1.0  documentation with a tryout interface. 
+
+#### REST API
+
+A openapi 3.1.0 REST API documentation is available as separate file inside the folder [../openapi](../openapi).
+
+
+
+---
 
 ## License
 

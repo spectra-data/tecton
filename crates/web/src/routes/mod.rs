@@ -9,7 +9,10 @@ use crate::state::AppState;
 
 use axum::extract::State;
 use axum::middleware::{self};
+use axum::routing::get_service;
 use axum::{Router, routing::get};
+
+use tower_http::services::{ServeDir, ServeFile};
 
 use std::future::ready;
 
@@ -30,7 +33,6 @@ use utoipa_swagger_ui::SwaggerUi;
     tags(
         (name = "index", description = "Document indexing endpoints"),
         (name = "search", description = "Search endpoints"),
-        (name = "update", description = "Document update endpoints"),
     ),
     info(
         title = format!("{} API",TB_INDEX_NAME),
@@ -38,7 +40,7 @@ use utoipa_swagger_ui::SwaggerUi;
         description = "tecton a text block indexing and search API with fulltext, vector, tree, and keyword search capabilities",
         contact(
             name = "tecton Team",
-            email = "support@example.com"
+           // email = "support@example.com"
         ),
         license(
             name = "MIT OR Apache-2.0",
@@ -74,8 +76,8 @@ struct OuterState {}
 
 pub fn create_router(state: AppState) -> Router {
     let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
-        .nest("/index", index::router())
-        .nest("/search", search::router())
+        .nest("/api/index", index::router())
+        .nest("/api/search", search::router())
         .with_state(state)
         .split_for_parts();
 
@@ -100,44 +102,9 @@ pub fn create_service_router(state: AppState) -> Router {
     Router::new()
         .nest("/actuate", h_routes)
         .route("/metrics", get(move || ready(recorder_handle.render())))
-}
-pub async fn swagger_ui() -> axum::response::Html<String> {
-    let html = format!(
-        r#"
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{} API Documentation</title>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
-    <style>
-        html {{ box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }}
-        *, *:before, *:after {{ box-sizing: inherit; }}
-        body {{ margin: 0; background: #fafafa; }}
-    </style>
-</head>
-<body>
-    <div id="swagger-ui"></div>
-    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
-    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
-    <script>
-        window.onload = function() {{
-            const ui = SwaggerUIBundle({{
-                url: '/api-docs/openapi.json',
-                dom_id: '#swagger-ui',
-                deepLinking: true,
-                presets: [
-                    SwaggerUIBundle.presets.apis,
-                    SwaggerUIStandalonePreset
-                ],
-                layout: "StandaloneLayout"
-            }});
-            window.ui = ui;
-        }};
-    </script>
-</body>
-</html>
-"#,
-        TB_INDEX_NAME
-    );
-    axum::response::Html(html)
+        .route(
+            "/favicon.ico",
+            get_service(ServeFile::new("assets/favicon.ico")),
+        )
+        .nest_service("/assets", ServeDir::new("assets"))
 }

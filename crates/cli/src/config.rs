@@ -15,7 +15,7 @@ pub fn load_config(config_path: Option<PathBuf>) -> anyhow::Result<CoreConfig> {
         figment = figment.merge(Toml::file("./config/config.toml"));
     }
 
-    figment = figment.merge(Env::prefixed("TB_INDEX_"));
+    figment = figment.merge(Env::prefixed("TECTON_"));
 
     Ok(figment.extract()?)
 }
