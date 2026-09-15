@@ -4,8 +4,7 @@
     "title": "tecton API",
     "description": "tecton a text block indexing and search API with fulltext, vector, tree, and keyword search capabilities",
     "contact": {
-      "name": "tecton Team",
-      "email": "support@example.com"
+      "name": "tecton Team"
     },
     "license": {
       "name": "MIT OR Apache-2.0",
@@ -24,7 +23,7 @@
     }
   ],
   "paths": {
-    "/index/keywords": {
+    "/api/index/keywords": {
       "post": {
         "operationId": "update_keywords",
         "requestBody": {
@@ -54,7 +53,7 @@
         }
       }
     },
-    "/index/text": {
+    "/api/index/text": {
       "post": {
         "operationId": "index_text",
         "requestBody": {
@@ -84,7 +83,7 @@
         }
       }
     },
-    "/search/document/{name}": {
+    "/api/search/document/{name}": {
       "get": {
         "description": "Search all blocks for a named document.",
         "operationId": "by_name",
@@ -128,7 +127,7 @@
         }
       }
     },
-    "/search/fulltext": {
+    "/api/search/fulltext": {
       "post": {
         "description": "Fulltext search of the text field via query.",
         "operationId": "fulltext",
@@ -153,13 +152,16 @@
               }
             }
           },
+          "404": {
+            "description": "Not active"
+          },
           "500": {
             "description": ""
           }
         }
       }
     },
-    "/search/id/{id}": {
+    "/api/search/id/{id}": {
       "get": {
         "description": "Return the block with the id or nothing.",
         "operationId": "by_id",
@@ -193,7 +195,7 @@
         }
       }
     },
-    "/search/keywords": {
+    "/api/search/keywords": {
       "post": {
         "description": "Search by keywords.",
         "operationId": "by_keywords",
@@ -227,7 +229,7 @@
         }
       }
     },
-    "/search/stemming": {
+    "/api/search/stemming": {
       "post": {
         "description": "Word Stem (stemming) search of the text field via query for the specified language.",
         "operationId": "stemming",
@@ -261,7 +263,7 @@
         }
       }
     },
-    "/search/tree": {
+    "/api/search/tree": {
       "post": {
         "description": "Search by tree e.g. /root/first. Will respond with all documents of /root/first and possible children.",
         "operationId": "by_tree",
@@ -292,7 +294,7 @@
         }
       }
     },
-    "/search/vector": {
+    "/api/search/vector": {
       "post": {
         "operationId": "search_vector",
         "requestBody": {
@@ -796,10 +798,6 @@
     {
       "name": "search",
       "description": "Search endpoints"
-    },
-    {
-      "name": "update",
-      "description": "Document update endpoints"
     }
   ]
 }

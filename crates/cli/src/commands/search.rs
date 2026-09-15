@@ -43,7 +43,7 @@ pub struct StemArgs {
     #[arg(short, long)]
     pub query: String,
 
-    /// Filter by language
+    /// Language for tokenizer and index
     #[arg(short, long)]
     pub language: String,
 
@@ -90,7 +90,7 @@ pub struct FulltextArgs {
     #[arg(short, long)]
     pub query: Option<String>,
 
-    /// Filter by language
+    /// Language for tokenizer and index
     #[arg(short, long)]
     pub language: Option<String>,
 
@@ -135,9 +135,9 @@ pub struct FulltextArgs {
 pub struct VectorArgs {
     /// Text to search for (will be embedded)
     #[arg(short, long)]
-    pub text: String,
+    pub query: String,
 
-    /// Language
+    /// Language for tokenizer and index
     #[arg(short, long)]
     pub language: String,
 
@@ -153,9 +153,21 @@ pub struct VectorArgs {
     #[arg(long, default_value = "10")]
     pub limit: usize,
 
+    /// Offset for pagination
+    #[arg(long, default_value = "0")]
+    pub offset: usize,
+
     /// Output format
     #[arg(short, long, default_value = "table")]
     pub format: OutputFormat,
+
+    /// Filter by Id
+    #[arg(long)]
+    pub id: Option<String>,
+
+    /// Filter by tree
+    #[arg(long)]
+    pub tree: Option<String>,
 }
 
 #[derive(Args, PartialEq, Eq, Clone)]
@@ -347,15 +359,15 @@ pub async fn execute_fulltext(config: CoreConfig, args: FulltextArgs) -> Result<
 pub async fn execute_vector(config: CoreConfig, args: VectorArgs) -> Result<()> {
     let index = TectonIndex::new(config)?;
     let params = SearchParams {
-        query_text: Some(args.text.clone()),
+        query_text: Some(args.query.clone()),
         lang: Some(args.language),
         name: args.name,
         min_date: parse_date(args.min_date)?,
         max_date: None,
         limit: args.limit.min(100),
-        offset: 0,
-        id: None,
-        tree: None,
+        offset: args.offset.min(0),
+        id: args.id,
+        tree: args.tree,
         keys: None,
     };
 

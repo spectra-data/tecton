@@ -46,7 +46,7 @@ const DOCUMENT_SIZE_BYTES: &'static str = concatcp!(TB_INDEX_NAME, "_document_si
 const DOCUMENT_ADDED_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_documents_added_total");
 const ERRORS_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_errors_total");
 const INDEX_SIZE_BYTES: &'static str = concatcp!(TB_INDEX_NAME, "_index_size_bytes");
-const SEARCH_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_total");
+const SEARCH_FULLTEXT_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_fulltext_total");
 const SEARCH_STERN_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_stern_total");
 const SEARCH_TREE_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_tree_total");
 const SEARCH_KEYWORD_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_keyword_total");
@@ -54,7 +54,8 @@ const SEARCH_ID_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_id_tota
 const SEARCH_DOCUMENT_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_document_total");
 const SEARCH_VECTOR_TOTOAL: &'static str = concatcp!(TB_INDEX_NAME, "_search_vector_total");
 
-const SEARCH_DURATION_SEC: &'static str = concatcp!(TB_INDEX_NAME, "_search_duration_seconds");
+const SEARCH_FULLTEXT_DURATION_SEC: &'static str =
+    concatcp!(TB_INDEX_NAME, "_search_fulltext_duration_seconds");
 const SEARCH_STERN_DURATION_SEC: &'static str =
     concatcp!(TB_INDEX_NAME, "_search_stern_duration_seconds");
 const SEARCH_TREE_DURATION_SEC: &'static str =
@@ -83,7 +84,10 @@ fn register_metrics() {
         DOCUMENTS_UPDATED_TOTOAL,
         "Total number of updated documents to the index."
     );
-    describe_counter!(SEARCH_TOTOAL, "Total number of search requests.");
+    describe_counter!(
+        SEARCH_FULLTEXT_TOTOAL,
+        "Total number of fulltext search requests."
+    );
     describe_counter!(
         SEARCH_STERN_TOTOAL,
         "Totoal number of stern search requests."
@@ -127,7 +131,7 @@ fn register_metrics() {
         "Time spent compacting index."
     );
     describe_histogram!(
-        SEARCH_DURATION_SEC,
+        SEARCH_FULLTEXT_DURATION_SEC,
         Unit::Seconds,
         "Fulltext search duration."
     );
@@ -200,9 +204,10 @@ pub fn record_error(error_type: &str) {
     counter!(ERRORS_TOTOAL, "type" => error_type.to_string()).increment(1);
 }
 
-pub fn update_search(sec: f64) {
-    histogram!(SEARCH_DURATION_SEC).record(sec);
-    counter!(SEARCH_TOTOAL).increment(1);
+pub fn update_search_fulltext(sec: f64, lang: &str) {
+    let labels = [(LANGUAGE, lang.to_owned())];
+    histogram!(SEARCH_FULLTEXT_DURATION_SEC, &labels).record(sec);
+    counter!(SEARCH_FULLTEXT_TOTOAL, &labels).increment(1);
 }
 
 pub fn update_search_stemming(sec: f64, lang: &str) {

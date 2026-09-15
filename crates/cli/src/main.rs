@@ -14,7 +14,7 @@ mod config;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cli = Cli::parse();
+    //let cli = Cli::parse();
 
     // Initialize tracing
     /*
@@ -48,7 +48,7 @@ async fn main() -> Result<()> {
         );
         return Ok(());
     }
-
+    let cli = Cli::parse();
     // Load configuration
     let config_path = cli.config.as_deref().map(std::path::PathBuf::from);
     let config = load_config(config_path)?;

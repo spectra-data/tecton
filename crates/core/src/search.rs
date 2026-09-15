@@ -5,7 +5,7 @@ use crate::{
     hash_indexer::MultiLangHashIndex,
     languages::{is_language_supported, whichlang_lang},
     metrics::{
-        update_search, update_search_document, update_search_id, update_search_keyword,
+        update_search_document, update_search_fulltext, update_search_id, update_search_keyword,
         update_search_stemming, update_search_tree, update_search_vector,
     },
     schema::{
@@ -246,7 +246,7 @@ impl SearcherWrapper {
         self.add_filters(&mut queries, &params)?;
 
         let results = self.query_for_result(queries, params.limit, params.offset, searcher)?;
-        update_search(start.elapsed().as_secs_f64());
+        update_search_fulltext(start.elapsed().as_secs_f64(), &lang);
         Ok(results)
     }
 
