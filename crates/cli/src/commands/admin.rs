@@ -289,7 +289,7 @@ async fn execute_sample_config(_config: CoreConfig) -> Result<()> {
     // Strictly the hardcoded defaults, zero runtime influence
     let core_defaults = CoreConfig::default();
     println!(
-        "# Default tectonx configuration\n{}",
+        "# Default tecton configuration\n{}",
         toml::to_string_pretty(&core_defaults).unwrap()
     );
 

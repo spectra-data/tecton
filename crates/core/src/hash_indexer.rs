@@ -23,6 +23,7 @@ pub struct MultiLangHashIndex {
     // Config for persistence
     config: HnswConfig,
     index_files_path: PathBuf,
+    inmemory: bool,
 }
 
 impl MultiLangHashIndex {
@@ -72,10 +73,37 @@ impl MultiLangHashIndex {
             tokenizers: tokenizers,
             config: config.clone(),
             index_files_path: index_files_path.clone(),
+            inmemory: false,
         }
     }
 
-    pub fn search(
+    pub fn create_inmemory(config: &HnswConfig, languages: &Vec<String>) -> Self {
+        let indexes: DashMap<String, LabeledIndex<Cosine, String>> = DashMap::new();
+        let tokenizers = TokenizerManager::default();
+        for lang in languages.iter() {
+            info!("Creating new HNSW index inmemory!");
+            let hnsw: LabeledIndex<Cosine, String> = Builder::new()
+                .m(config.m)
+                .ef_construction(config.ef_construction)
+                .capacity(1000)
+                .seed(config.seed)
+                .build_labeled(Cosine);
+            indexes.insert(lang.clone(), hnsw);
+            if config.stem {
+                tokenizers.register(get_stem_lang(lang).as_str(), build_stemer_tokenizer(lang));
+            }
+        }
+
+        Self {
+            indexes: indexes,
+            tokenizers: tokenizers,
+            config: config.clone(),
+            index_files_path: PathBuf::new(),
+            inmemory: false,
+        }
+    }
+
+    pub async fn search(
         &self,
         text: &str,
         top_k: usize,
@@ -100,16 +128,13 @@ impl MultiLangHashIndex {
 
         let mut results = Vec::with_capacity(neighbors.len());
         for hit in neighbors {
-            //println!("hit.distance {}", hit.distance);
             let score = 1.0 - hit.distance;
             results.push((hit.payload.clone(), score.max(0.0).min(1.0)));
-            //results.push((hit.payload.clone(), score));
         }
         Ok(results)
     }
 
-    pub fn index(&self, text: &str, id: &str, lang: &str) {
-        //println!("bm25: {}", self.config.hnsw.bm25);
+    pub fn index(&self, text: &str, id: &str, lang: &str) -> usize {
         let mut analyzer = if self.config.stem {
             self.tokenizers.get(get_stem_lang(lang).as_str()).unwrap()
         } else {
@@ -125,17 +150,19 @@ impl MultiLangHashIndex {
 
         let mut index = self.indexes.get_mut(lang).unwrap();
         let hswn = index.value_mut();
-        hswn.insert(query_vec, id.to_string());
+        hswn.insert(query_vec, id.to_string())
     }
 
     /// Persist to disk.
     pub fn persist(&self, lang: &str) -> Result<()> {
-        let index = self.indexes.get(lang).unwrap();
-        let hswn = index.value();
-        let path = build_index_file_path(&self.index_files_path, lang);
-        // Save HNSW
-        hswn.save(path.as_path())?;
-        info!("HNSW persisted to {:?}", path);
+        if !self.inmemory {
+            let index = self.indexes.get(lang).unwrap();
+            let hswn = index.value();
+            let path = build_index_file_path(&self.index_files_path, lang);
+            // Save HNSW
+            hswn.save(path.as_path())?;
+            info!("HNSW persisted to {:?}", path);
+        }
         Ok(())
     }
 }

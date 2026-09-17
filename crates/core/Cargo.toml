@@ -36,3 +36,5 @@ ahash= {workspace = true}
 
 once_cell = {workspace = true}
 rayon= {workspace = true}
+
+#[dev-dependencies]

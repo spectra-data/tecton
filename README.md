@@ -335,7 +335,7 @@ Print a toml config file with default values
 tecton admin toml-config
 ```
 ```toml
-# Default tectonx configuration
+# Default tecton configuration
 [index]
 index_path = "./index"
 tantivy_dir = "tantivy_index"
@@ -349,7 +349,7 @@ languages = ["en"]
 [index.hnsw]
 hnsw_dir = "hnsw_index"
 n_grams = 2
-dimension = 4096
+dimension = 1024
 m = 16
 ef_construction = 200
 ef_search = 64
