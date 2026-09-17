@@ -34,7 +34,7 @@ impl TectonIndex {
             index_manager.schema(),
             index_manager.tokenizer().clone(),
             config.index.enable_steam,
-            config.index.languages,
+            &config.index.languages,
         )?;
         Ok(Self {
             index_manager,
@@ -49,7 +49,7 @@ impl TectonIndex {
             index_manager.schema(),
             index_manager.tokenizer().clone(),
             config.index.enable_steam,
-            config.index.languages,
+            &config.index.languages,
         )?;
 
         Ok(Self {
@@ -65,7 +65,7 @@ impl TectonIndex {
             index_manager.schema(),
             index_manager.tokenizer().clone(),
             config.index.enable_steam,
-            config.index.languages,
+            &config.index.languages,
         )?;
 
         Ok(Self {
@@ -125,7 +125,7 @@ impl TectonIndex {
         self.index_manager.compact()
     }
 
-    /// Stemming search
+    /// Stemming search, if it is enabled
     pub async fn search_stern(&self, params: &SearchParams) -> Result<Vec<SearchResult>> {
         if !self.index_manager.config.enable_steam {
             return Err(CoreError::IndexDisabled("Stemming".to_string()));
@@ -142,7 +142,7 @@ impl TectonIndex {
             .await
     }
 
-    /// Vector search
+    /// Vector search, if it is enabled
     pub async fn search_vector(&self, params: &SearchParams) -> Result<Vec<SearchResult>> {
         if !self.index_manager.config.enable_hnsw {
             return Err(CoreError::IndexDisabled("Vector".to_string()));

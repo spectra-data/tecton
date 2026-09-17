@@ -39,7 +39,7 @@ opentelemetry-otlp = { version = "0.32", features = ["metrics","grpc-tonic"] }
 opentelemetry_sdk = { version = "0.32", features = ["trace"] }
 tracing-opentelemetry= { version="0.33"}
 anyhow = "1.0"
-tokio = { version = "1.53", features = ["full"] }
+tokio = { version = "1.53", features = ["full","macros","rt"] }
 parking_lot = "0.12"
 dashmap = "6.2"
 num_cpus = "1.17"
@@ -84,5 +84,4 @@ walkdir = "2.5"
 
 # Config
 figment = { version = "0.10", features = ["toml", "yaml", "env"] }
-
-#[dev-dependencies]
+# Test dependencies

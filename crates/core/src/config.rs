@@ -97,7 +97,7 @@ pub struct HnswConfig {
     #[serde(default = "default_n_grams")]
     pub n_grams: usize,
 
-    /// dimension for layer default: 4096 (dim)
+    /// dimension for layer default: 1024 (dim)
     #[serde(default = "default_dim")]
     pub dimension: usize,
 
@@ -127,7 +127,7 @@ fn default_n_grams() -> usize {
 }
 
 fn default_dim() -> usize {
-    4096
+    1024
 }
 
 fn default_m() -> usize {

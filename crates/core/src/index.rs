@@ -58,7 +58,7 @@ impl IndexManager {
     pub fn create(config: &IndexConfig) -> Result<Self> {
         let tantivy_dir = Self::get_tantivy_index_path(&config);
         std::fs::create_dir_all(&tantivy_dir.as_path())?;
-        println!("{:?} ", config);
+
         let schema = build_schema(config.enable_steam, &config.languages); //, config.enable_vector_index);
         let index = Index::create_in_dir(tantivy_dir, schema)?;
 
@@ -74,6 +74,7 @@ impl IndexManager {
 
         let index = Index::open_in_dir(Self::get_tantivy_index_path(&config))?;
         Self::from_index_with_writer(index, config)
+        //Self::from_index_read_only(index, config)
     }
 
     fn from_index_with_writer(index: Index, config: &IndexConfig) -> Result<Self> {
@@ -105,6 +106,46 @@ impl IndexManager {
             index,
             config: config.clone(),
             writer: RwLock::new(Some(writer)),
+            num_docs: RwLock::new(num_docs),
+            reader,
+            // hnsw_embedder: hnsw_embedder,
+            hswn_index: hswn_index,
+        })
+    }
+
+    #[allow(dead_code)]
+    fn from_index_read_only(index: Index, config: &IndexConfig) -> Result<Self> {
+        // https://github.com/quickwit-oss/tantivy/pull/3058
+        // a solution is a special directory see https://github.com/quickwit-oss/tantivy/pull/3058/changes/bda50c5e902f8aa881fc413cecbe95870eefcc26
+
+        register_tokenizers(&index, config.enable_steam, &config.languages);
+
+        let writer = None; //index.writer(config.buffer_size)?;
+
+        // Count existing documents
+        let reader = index
+            .reader_builder()
+            .reload_policy(ReloadPolicy::OnCommitWithDelay)
+            .try_into()
+            .map_err(|e| CoreError::Tantivy(e))?;
+
+        let searcher = reader.searcher();
+        let num_docs = searcher.num_docs();
+
+        let hswn_index = if config.enable_hnsw {
+            Some(MultiLangHashIndex::load_or_create(
+                &config.hnsw,
+                &config.index_path.clone(),
+                &config.languages,
+            ))
+        } else {
+            None
+        };
+
+        Ok(Self {
+            index,
+            config: config.clone(),
+            writer: RwLock::new(writer),
             num_docs: RwLock::new(num_docs),
             reader,
             // hnsw_embedder: hnsw_embedder,
