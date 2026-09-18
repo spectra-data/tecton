@@ -27,8 +27,8 @@ use chrono::{DateTime, Utc};
 
 use parking_lot::RwLock;
 //use serde_json::value;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::{path::PathBuf, sync::atomic::AtomicU64};
+use std::{str::FromStr, sync::atomic::Ordering::Relaxed};
 //use std::sync::Arc;
 
 use tantivy::{
@@ -48,7 +48,7 @@ pub struct IndexManager {
     index: Index,
     pub(crate) config: IndexConfig,
     writer: RwLock<Option<IndexWriter>>,
-    num_docs: RwLock<u64>,
+    num_docs: AtomicU64,
     reader: IndexReader,
     // hnsw_embedder: Option<HnswEmbedder>,
     hswn_index: Option<MultiLangHashIndex>,
@@ -106,7 +106,7 @@ impl IndexManager {
             index,
             config: config.clone(),
             writer: RwLock::new(Some(writer)),
-            num_docs: RwLock::new(num_docs),
+            num_docs: AtomicU64::new(num_docs),
             reader,
             // hnsw_embedder: hnsw_embedder,
             hswn_index: hswn_index,
@@ -146,7 +146,7 @@ impl IndexManager {
             index,
             config: config.clone(),
             writer: RwLock::new(writer),
-            num_docs: RwLock::new(num_docs),
+            num_docs: AtomicU64::new(num_docs),
             reader,
             // hnsw_embedder: hnsw_embedder,
             hswn_index: hswn_index,
@@ -231,13 +231,13 @@ impl IndexManager {
         writer.add_document(doc)?;
 
         if self.config.enable_hnsw {
-            println!("index hnsw");
+            //println!("index hnsw");
             let hswn_index = self.hswn_index.as_ref().unwrap();
             hswn_index.index(text.as_str(), ulid.to_string().as_str(), lang.as_str());
             hswn_index.persist(lang.as_str())?;
         }
 
-        *self.num_docs.write() += 1;
+        self.num_docs.fetch_add(1, Relaxed);
 
         update_document_insert(text.len() as f64, &lang);
         update_documents_total(self.num_docs());
@@ -316,7 +316,7 @@ impl IndexManager {
         let writer = writer_guard.as_mut().ok_or(CoreError::Locked)?;
         writer.add_document(doc)?;
 
-        *self.num_docs.write() += 1;
+        self.num_docs.fetch_add(1, Relaxed);
 
         update_document_update();
         update_documents_total(self.num_docs());
@@ -334,7 +334,7 @@ impl IndexManager {
 
         writer.delete_term(term);
         writer.commit()?;
-        *self.num_docs.write() -= 1;
+        self.num_docs.fetch_sub(1, Relaxed);
         update_documents_total(self.num_docs());
         Ok(())
     }
@@ -357,7 +357,7 @@ impl IndexManager {
     }
 
     pub fn num_docs(&self) -> u64 {
-        *self.num_docs.read()
+        self.num_docs.load(Relaxed)
     }
 
     pub fn index(&self) -> &Index {

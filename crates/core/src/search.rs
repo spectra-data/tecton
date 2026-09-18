@@ -301,7 +301,7 @@ impl SearcherWrapper {
             .filter(|(_id, score)| score.gt(&0.0_f32))
             .map(|(id, _score)| id.as_str())
             .collect::<Vec<&str>>();
-        println!("ids {:?}", ids);
+        //println!("ids {:?}", ids);
         debug!("Vector search count vector ids {}", &ids.len());
         let blocks = self.search_ids_with_filter(&ids, &params, searcher).await;
         let result: Result<Vec<SearchResult>> = match blocks {

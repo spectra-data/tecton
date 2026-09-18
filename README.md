@@ -52,7 +52,10 @@ https://github.com/spectra-data/tecton.git
 Build the project with
 
 ```sh
-cargo install --path .
+cargo install --path cargo/cli
+# or
+cargo run -- --help
+
 ```
 Copy the executable or execute from the building folder 
 ```sh
